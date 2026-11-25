@@ -70,7 +70,7 @@
             <div class="flex items-center gap-2">
                 <span class="text-xs font-bold uppercase text-slate-500 tracking-wider">Figure View Mode:</span>
                 <div class="inline-flex bg-slate-100 p-1 rounded-lg border border-slate-200">
-                    <button onclick="setViewMode('combined')" id="btn-mode-combined" class="mode-btn active px-3 py-1.5 rounded-md text-xs font-semibold transition">6 Primary Figures (Tri-Modal &amp; Telemetry)</button>
+                    <button onclick="setViewMode('combined')" id="btn-mode-combined" class="mode-btn active px-3 py-1.5 rounded-md text-xs font-semibold transition">7 Primary Figures (Tri-Modal &amp; Telemetry)</button>
                     <button onclick="setViewMode('solo')" id="btn-mode-solo" class="mode-btn px-3 py-1.5 rounded-md text-xs font-semibold text-slate-600 transition hover:text-slate-900">12 Standalone Solo Subfigures</button>
                 </div>
             </div>
@@ -81,10 +81,11 @@
         <div id="nav-combined" class="flex flex-wrap gap-2 border-b border-slate-200 mb-6 pb-2">
             <button onclick="switchTab('fig1')" id="btn-fig1" class="nav-btn active px-3.5 py-2 rounded-lg text-xs font-semibold border transition">Figure 1: Tri-Modal Throughput</button>
             <button onclick="switchTab('fig2')" id="btn-fig2" class="nav-btn bg-slate-100 text-slate-700 px-3.5 py-2 rounded-lg text-xs font-semibold border border-transparent transition hover:bg-slate-200">Figure 2: Speedup &amp; Efficiency</button>
-            <button onclick="switchTab('fig3')" id="btn-fig3" class="nav-btn bg-slate-100 text-slate-700 px-3.5 py-2 rounded-lg text-xs font-semibold border border-transparent transition hover:bg-slate-200">Figure 3: Step Breakdown &amp; Γ</button>
+            <button onclick="switchTab('fig3')" id="btn-fig3" class="nav-btn bg-slate-100 text-slate-700 px-3.5 py-2 rounded-lg text-xs font-semibold border border-transparent transition hover:bg-slate-200">Figure 3: Tri-Modal Step Breakdown &amp; Γ</button>
             <button onclick="switchTab('fig4')" id="btn-fig4" class="nav-btn bg-slate-100 text-slate-700 px-3.5 py-2 rounded-lg text-xs font-semibold border border-transparent transition hover:bg-slate-200">Figure 4: Tri-Modal Convergence</button>
             <button onclick="switchTab('fig5')" id="btn-fig5" class="nav-btn bg-slate-100 text-slate-700 px-3.5 py-2 rounded-lg text-xs font-semibold border border-transparent transition hover:bg-slate-200">Figure 5: Network Sensitivity</button>
-            <button onclick="switchTab('fig6')" id="btn-fig6" class="nav-btn bg-slate-100 text-slate-700 px-3.5 py-2 rounded-lg text-xs font-semibold border border-transparent transition hover:bg-slate-200">Figure 6: 18.4h System Telemetry</button>
+            <button onclick="switchTab('fig6')" id="btn-fig6" class="nav-btn bg-slate-100 text-slate-700 px-3.5 py-2 rounded-lg text-xs font-semibold border border-transparent transition hover:bg-slate-200">Figure 6: Vision/LLM Telemetry (18.4h)</button>
+            <button onclick="switchTab('fig6b')" id="btn-fig6b" class="nav-btn bg-slate-100 text-slate-700 px-3.5 py-2 rounded-lg text-xs font-semibold border border-transparent transition hover:bg-slate-200">Figure 6b: Voice Telemetry (3.6h)</button>
         </div>
 
         <!-- Solo Navigation Buttons (Hidden by default) -->
@@ -147,11 +148,23 @@
         const gpt2_eff = [12.1, 22.0, 36.4, 53.7, 69.9, 82.1, 89.8];
         const whisper_eff = [10.5, 19.3, 33.1, 49.6, 66.7, 79.6, 87.5];
 
+        const fwd_resnet = [0.09, 0.17, 0.34, 0.69, 1.38, 2.94, 5.98];
+        const bwd_resnet = [0.0, 0.36, 0.72, 1.47, 2.93, 6.21, 12.65];
+        const comm_resnet = [4.02, 3.86, 3.81, 3.76, 3.84, 3.81, 3.95];
+        const gammas_resnet = [0.022, 0.139, 0.280, 0.575, 1.123, 2.402, 4.711];
+
         const fwd_gpt2 = [2.49, 4.98, 10.07, 20.52, 41.86, 85.03, 171.38];
         const bwd_gpt2 = [0.0, 5.24, 10.99, 23.04, 47.36, 96.40, 194.68];
         const comm_gpt2 = [44.61, 41.54, 41.45, 41.32, 41.39, 41.22, 41.03];
         const gammas_gpt2 = [0.056, 0.246, 0.508, 1.054, 2.156, 4.402, 8.922];
+
+        const fwd_whisper = [0.44, 0.87, 1.73, 3.67, 7.48, 15.32, 31.23];
+        const bwd_whisper = [0.0, 1.67, 3.39, 7.26, 14.96, 30.67, 62.65];
+        const comm_whisper = [13.27, 12.45, 12.31, 12.40, 12.24, 12.17, 12.18];
         const gammas_whisper = [0.033, 0.204, 0.416, 0.882, 1.833, 3.778, 7.706];
+
+        // 1-minute mean bins from sysmon_node01_20261125_224615.csv (12,879 1Hz samples, 3.58h Voice run)
+        const sysmonVoice = {"h": [0.008, 0.025, 0.042, 0.058, 0.075, 0.092, 0.108, 0.125, 0.142, 0.158, 0.175, 0.192, 0.208, 0.225, 0.242, 0.258, 0.275, 0.292, 0.308, 0.325, 0.342, 0.358, 0.375, 0.392, 0.408, 0.425, 0.442, 0.458, 0.475, 0.492, 0.508, 0.525, 0.542, 0.558, 0.575, 0.592, 0.608, 0.625, 0.642, 0.658, 0.675, 0.692, 0.708, 0.725, 0.742, 0.758, 0.775, 0.792, 0.808, 0.825, 0.842, 0.858, 0.875, 0.892, 0.908, 0.925, 0.942, 0.958, 0.975, 0.992, 1.008, 1.025, 1.042, 1.058, 1.075, 1.092, 1.108, 1.125, 1.142, 1.158, 1.175, 1.192, 1.208, 1.225, 1.242, 1.258, 1.275, 1.292, 1.308, 1.325, 1.342, 1.358, 1.375, 1.392, 1.408, 1.425, 1.442, 1.458, 1.475, 1.492, 1.508, 1.525, 1.542, 1.558, 1.575, 1.592, 1.608, 1.625, 1.642, 1.658, 1.675, 1.692, 1.708, 1.725, 1.742, 1.758, 1.775, 1.792, 1.808, 1.825, 1.842, 1.858, 1.875, 1.892, 1.908, 1.925, 1.942, 1.958, 1.975, 1.992, 2.008, 2.025, 2.042, 2.058, 2.075, 2.092, 2.108, 2.125, 2.142, 2.158, 2.175, 2.192, 2.208, 2.225, 2.242, 2.258, 2.275, 2.292, 2.308, 2.325, 2.342, 2.358, 2.375, 2.392, 2.408, 2.425, 2.442, 2.458, 2.475, 2.492, 2.508, 2.525, 2.542, 2.558, 2.575, 2.592, 2.608, 2.625, 2.642, 2.658, 2.675, 2.692, 2.708, 2.725, 2.742, 2.758, 2.775, 2.792, 2.808, 2.825, 2.842, 2.858, 2.875, 2.892, 2.908, 2.925, 2.942, 2.958, 2.975, 2.992, 3.008, 3.025, 3.042, 3.058, 3.075, 3.092, 3.108, 3.125, 3.142, 3.158, 3.175, 3.192, 3.208, 3.225, 3.242, 3.258, 3.275, 3.292, 3.308, 3.325, 3.342, 3.358, 3.375, 3.392, 3.408, 3.425, 3.442, 3.458, 3.475, 3.492, 3.508, 3.525, 3.542, 3.558, 3.573], "cpu": [5.9, 2.8, 0.3, 0.4, 0.5, 0.5, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.4, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 38.5, 43.9, 6.0, 6.1, 5.8, 5.9, 6.0, 6.0, 8.1, 10.9, 8.1, 10.8, 8.1, 10.8, 8.3, 17.6, 18.2, 12.9, 17.4, 15.3, 15.2, 17.0, 18.6, 24.5, 28.7, 21.7, 26.3, 26.7, 29.0, 20.2, 26.3, 29.7, 21.6, 34.3, 42.8, 34.5, 33.6, 33.0, 32.9, 37.4, 41.5, 33.7, 32.1, 33.8, 33.9, 39.0, 40.0, 33.1, 44.2, 45.0, 45.2, 45.2, 45.2, 45.3, 45.4, 32.9, 44.2, 45.1, 45.0, 45.1, 45.0, 45.2, 45.0, 33.0, 44.0, 45.0, 45.0, 45.1, 45.2, 45.2, 45.3, 33.0, 56.6, 44.4, 46.2, 56.0, 45.3, 56.9, 45.3, 56.9, 45.2, 50.8, 51.4, 45.7, 56.9, 33.2, 56.6, 44.4, 56.9, 45.5, 55.1, 47.1, 45.6, 56.6, 45.2, 56.2, 45.1, 56.3, 45.1, 47.8, 41.6, 46.0, 54.4, 45.2, 56.3, 45.0, 56.3, 45.0, 51.9, 49.1, 44.9, 56.4, 45.0, 56.1, 16.3, 7.4, 4.4, 7.1, 4.4, 5.8, 5.9, 6.1, 4.7, 7.4, 4.7, 5.9, 6.2, 6.0, 6.1, 4.7, 6.2, 6.1, 6.1, 7.3, 11.3, 8.6, 11.3, 8.8, 10.0, 9.7, 14.0, 16.6, 16.8, 16.3, 16.5, 16.4, 16.5, 16.7, 20.5, 30.0, 25.1, 21.4, 33.0, 23.5, 31.8, 21.1, 27.2, 28.1, 21.4, 42.6, 36.3, 34.1, 45.8, 24.3, 42.7, 33.8, 40.6, 38.8, 30.6, 36.1, 33.6, 45.0, 34.4, 34.7, 13.6, 19.0, 15.6, 20.4, 13.3], "ram": [3.34, 2.63, 2.06, 2.08, 2.14, 2.14, 2.14, 2.22, 2.32, 2.31, 2.3, 2.3, 2.3, 2.3, 2.3, 2.29, 2.29, 2.54, 2.55, 2.55, 2.54, 2.54, 2.54, 2.54, 2.54, 2.54, 2.54, 2.54, 2.54, 2.54, 2.54, 2.54, 2.54, 2.54, 2.54, 2.54, 3.69, 3.94, 3.88, 4.29, 4.15, 4.32, 4.14, 4.33, 4.22, 4.42, 4.27, 4.41, 4.26, 4.36, 4.36, 4.39, 4.5, 4.3, 4.54, 4.56, 4.42, 4.52, 4.37, 4.5, 4.53, 4.55, 4.43, 4.54, 4.56, 4.35, 4.52, 4.5, 4.4, 4.38, 4.57, 4.53, 4.52, 4.41, 4.46, 4.54, 4.55, 4.55, 4.4, 4.49, 4.49, 4.49, 4.56, 4.31, 4.4, 4.5, 4.54, 4.52, 4.54, 4.54, 4.51, 4.35, 4.48, 4.55, 4.56, 4.58, 4.62, 4.64, 4.58, 4.36, 4.46, 4.56, 4.54, 4.54, 4.54, 4.57, 4.58, 4.33, 4.32, 4.47, 4.56, 4.56, 4.56, 4.58, 4.5, 4.54, 4.55, 4.53, 4.56, 4.55, 4.56, 4.42, 4.34, 4.4, 4.55, 4.58, 4.59, 4.55, 4.53, 4.53, 4.51, 4.56, 4.57, 4.61, 4.54, 4.58, 4.32, 4.38, 4.59, 4.6, 4.57, 4.53, 4.59, 4.57, 4.55, 4.55, 4.58, 4.6, 4.57, 4.6, 3.61, 4.18, 3.98, 4.23, 3.96, 4.21, 4.04, 3.73, 3.69, 3.72, 3.76, 3.65, 3.77, 3.47, 3.51, 3.47, 3.53, 3.53, 3.51, 3.45, 3.5, 3.47, 3.53, 3.5, 3.48, 3.55, 3.45, 3.54, 3.52, 3.49, 3.56, 3.49, 3.51, 3.56, 3.48, 3.54, 3.55, 3.53, 3.48, 3.56, 3.56, 3.44, 3.54, 3.53, 3.5, 3.47, 3.55, 3.56, 3.56, 3.51, 3.42, 3.53, 3.57, 3.55, 3.52, 3.44, 3.53, 3.54, 3.55, 3.55, 3.65, 4.42, 4.46, 4.5, 4.37], "tx": [10.11, 10.25, 11.73, 11.79, 11.88, 11.88, 11.73, 11.71, 11.72, 11.71, 11.71, 11.71, 11.71, 11.71, 11.71, 11.71, 11.71, 11.7, 11.71, 11.71, 11.71, 11.71, 11.71, 11.71, 11.71, 11.71, 11.71, 11.71, 11.71, 11.71, 11.71, 11.71, 11.71, 11.71, 11.71, 11.71, 2.65, 1.47, 11.26, 11.36, 11.29, 11.44, 11.24, 11.44, 10.48, 10.45, 10.58, 10.45, 10.61, 10.45, 10.76, 8.65, 8.96, 9.4, 8.79, 9.04, 8.98, 8.71, 8.33, 7.32, 6.65, 7.89, 6.83, 7.09, 6.43, 7.96, 7.13, 6.28, 7.96, 5.13, 3.56, 5.09, 5.44, 5.42, 5.44, 4.43, 3.6, 5.44, 5.57, 4.95, 5.08, 3.99, 3.63, 5.06, 2.54, 2.54, 2.58, 2.54, 2.54, 2.54, 2.54, 5.25, 2.57, 2.57, 2.57, 2.57, 2.56, 2.54, 2.54, 5.06, 2.54, 2.54, 2.85, 2.9, 2.9, 2.9, 2.9, 5.42, 0.37, 2.9, 2.76, 0.52, 2.9, 0.37, 2.9, 0.37, 2.9, 1.78, 1.49, 2.9, 0.37, 5.42, 0.37, 2.9, 0.37, 2.9, 0.94, 2.37, 2.9, 0.37, 2.55, 0.0, 2.54, 0.0, 2.54, 1.97, 3.09, 2.14, 0.41, 2.54, 0.0, 2.54, 0.0, 2.54, 1.06, 1.48, 2.58, 0.0, 2.54, 0.0, 7.54, 11.26, 11.17, 11.15, 11.17, 11.26, 11.04, 10.9, 11.05, 10.63, 11.04, 10.84, 10.83, 10.65, 10.71, 10.89, 10.74, 10.65, 10.76, 10.37, 9.68, 10.12, 9.68, 10.11, 9.84, 10.0, 8.95, 8.53, 8.52, 8.56, 8.58, 8.5, 8.58, 8.55, 7.6, 5.87, 6.86, 7.6, 5.11, 7.16, 5.5, 7.6, 6.47, 6.22, 7.6, 3.21, 4.4, 5.07, 2.58, 6.96, 3.23, 5.08, 3.65, 3.96, 5.65, 4.48, 5.08, 2.76, 4.85, 4.85, 7.82, 8.58, 9.03, 8.2, 8.98], "rx": [7.67, 10.67, 12.2, 12.15, 12.06, 12.06, 12.2, 12.22, 12.21, 12.22, 12.22, 12.22, 12.22, 12.22, 12.22, 12.22, 12.22, 12.21, 12.22, 12.22, 12.22, 12.22, 12.22, 12.22, 12.22, 12.22, 12.22, 12.22, 12.22, 12.22, 12.22, 12.22, 12.22, 12.22, 12.22, 12.22, 2.77, 0.04, 10.3, 10.99, 9.41, 11.59, 8.81, 11.6, 8.19, 10.54, 8.13, 10.56, 8.16, 10.56, 9.0, 7.99, 9.01, 6.99, 9.17, 9.37, 6.86, 9.09, 6.05, 7.29, 6.61, 6.72, 5.36, 7.05, 6.36, 5.39, 7.1, 6.21, 5.38, 5.01, 3.37, 4.96, 5.33, 2.74, 5.33, 4.52, 3.46, 5.33, 2.9, 5.13, 5.3, 4.16, 3.79, 2.71, 2.65, 2.65, 2.69, 2.65, 2.65, 2.65, 2.65, 2.72, 2.65, 2.65, 2.65, 2.65, 2.65, 2.65, 2.65, 2.71, 2.65, 2.65, 2.67, 2.68, 2.68, 2.68, 2.68, 2.74, 0.03, 2.68, 2.52, 0.18, 2.68, 0.03, 2.68, 0.03, 2.68, 1.5, 1.2, 2.68, 0.03, 2.74, 0.03, 2.68, 0.03, 2.68, 0.62, 2.12, 2.68, 0.03, 2.65, 0.0, 2.65, 0.0, 2.65, 2.06, 0.65, 2.22, 0.43, 2.65, 0.0, 2.65, 0.0, 2.65, 1.11, 1.54, 2.69, 0.0, 2.65, 0.0, 5.25, 11.52, 9.08, 11.63, 9.08, 11.75, 8.95, 11.37, 9.08, 10.96, 10.26, 10.01, 11.21, 8.62, 11.17, 8.79, 11.2, 8.54, 11.22, 8.25, 10.1, 7.98, 10.1, 10.25, 8.0, 10.44, 6.72, 8.9, 8.54, 6.71, 8.95, 6.3, 8.95, 8.92, 5.35, 6.12, 7.12, 5.35, 5.33, 7.48, 5.74, 5.35, 6.75, 6.5, 5.35, 3.35, 4.59, 5.26, 2.69, 5.34, 2.71, 5.3, 3.81, 4.14, 5.31, 2.69, 5.3, 2.88, 5.06, 5.06, 5.59, 8.95, 9.42, 8.55, 9.37]};
 
         const cifar_loss = [1.7149, 1.2741];
         const cifar_acc = [49.02, 58.79];
@@ -205,7 +218,7 @@
             const desc = document.getElementById('chart-desc');
             const badge = document.getElementById('chart-badge');
             const stageEl = document.getElementById('main-chart');
-            stageEl.style.height = (tabId === 'fig6') ? '680px' : '540px';
+            stageEl.style.height = (tabId === 'fig6' || tabId === 'fig6b') ? '680px' : '540px';
 
             // --- RENDER ROUTING ---
             if (tabId === 'fig1') {
@@ -320,48 +333,67 @@
             }
 
             else if (tabId === 'fig3') {
-                title.innerText = 'Figure 3: Step Time Breakdown & Ratio Γ (Compute vs Network)';
-                desc.innerText = 'Stacked time decomposition (GPT-2 Small) and compute-to-comm ratio Γ inverting from 0.056→8.922 (GPT-2) and 0.033→7.706 (Whisper).';
-                badge.innerHTML = '<span class="text-xs bg-blue-50 text-blue-700 font-medium px-2.5 py-1 rounded-md border border-blue-200">Dual Panel</span>';
+                title.innerText = 'Figure 3: Tri-Modal Step Duration Breakdown & Ratio Γ (Compute vs Network)';
+                desc.innerText = 'Compute (Forward+Backward) grows with K while AllReduce waits stay flat (ResNet ~3.8s, Whisper ~12.2s, GPT-2 ~41.2s), inverting Γ across all 3 models.';
+                badge.innerHTML = '<span class="text-xs bg-blue-50 text-blue-700 font-medium px-2.5 py-1 rounded-md border border-blue-200">Tri-Modal Comparison</span>';
 
-                const trace_fwd = { x: ks, y: fwd_gpt2, name: 'GPT-2 Forward (s)', type: 'bar', marker: { color: '#3b82f6' } };
-                const trace_bwd = { x: ks, y: bwd_gpt2, name: 'GPT-2 Backward (s)', type: 'bar', marker: { color: '#10b981' } };
-                const trace_comm = { x: ks, y: comm_gpt2, name: 'GPT-2 AllReduce (s)', type: 'bar', marker: { color: '#ef4444' } };
-                const trace_gamma = { x: ks, y: gammas_gpt2, name: 'GPT-2 Γ', type: 'scatter', mode: 'lines+markers', yaxis: 'y2', marker: { size: 9, color: '#8b5cf6' }, line: { width: 3 } };
-                const trace_gamma_w = { x: ks, y: gammas_whisper, name: 'Whisper-Tiny Γ', type: 'scatter', mode: 'lines+markers', yaxis: 'y2', marker: { size: 8, color: '#059669' }, line: { width: 2.5, dash: 'dot' } };
+                const tr_rf = { x: ks, y: fwd_resnet, name: 'ResNet Fwd', type: 'bar', marker: { color: '#3b82f6' }, xaxis: 'x1', yaxis: 'y1', showlegend: false };
+                const tr_rb = { x: ks, y: bwd_resnet, name: 'ResNet Bwd', type: 'bar', marker: { color: '#10b981' }, xaxis: 'x1', yaxis: 'y1', showlegend: false };
+                const tr_rc = { x: ks, y: comm_resnet, name: 'ResNet AllReduce', type: 'bar', marker: { color: '#ef4444' }, xaxis: 'x1', yaxis: 'y1', showlegend: false };
 
-                Plotly.newPlot('main-chart', [trace_fwd, trace_bwd, trace_comm, trace_gamma, trace_gamma_w], {
+                const tr_gf = { x: ks, y: fwd_gpt2, name: 'Forward Compute (s)', type: 'bar', marker: { color: '#3b82f6' }, xaxis: 'x2', yaxis: 'y2' };
+                const tr_gb = { x: ks, y: bwd_gpt2, name: 'Backward Compute (s)', type: 'bar', marker: { color: '#10b981' }, xaxis: 'x2', yaxis: 'y2' };
+                const tr_gc = { x: ks, y: comm_gpt2, name: 'AllReduce Barrier (s)', type: 'bar', marker: { color: '#ef4444' }, xaxis: 'x2', yaxis: 'y2' };
+
+                const tr_wf = { x: ks, y: fwd_whisper, name: 'Whisper Fwd', type: 'bar', marker: { color: '#3b82f6' }, xaxis: 'x3', yaxis: 'y3', showlegend: false };
+                const tr_wb = { x: ks, y: bwd_whisper, name: 'Whisper Bwd', type: 'bar', marker: { color: '#10b981' }, xaxis: 'x3', yaxis: 'y3', showlegend: false };
+                const tr_wc = { x: ks, y: comm_whisper, name: 'Whisper AllReduce', type: 'bar', marker: { color: '#ef4444' }, xaxis: 'x3', yaxis: 'y3', showlegend: false };
+
+                Plotly.newPlot('main-chart', [tr_rf, tr_rb, tr_rc, tr_gf, tr_gb, tr_gc, tr_wf, tr_wb, tr_wc], {
                     barmode: 'stack',
-                    xaxis: { title: 'Accumulation Steps (K)' }, yaxis: { title: 'Step Duration (seconds)' },
-                    yaxis2: { title: 'Compute-to-Comm Ratio (Γ)', overlaying: 'y', side: 'right', range: [0, 10] },
-                    margin: { t: 40, b: 60, l: 60, r: 60 }, legend: { orientation: 'h', y: -0.22 }
+                    grid: { rows: 1, columns: 3, pattern: 'independent' },
+                    xaxis1: { title: 'ResNet-18 (K)' }, yaxis1: { title: 'Step Time (s)' },
+                    xaxis2: { title: 'GPT-2 Small (K)' }, yaxis2: { title: 'Step Time (s)' },
+                    xaxis3: { title: 'Whisper-Tiny (K)' }, yaxis3: { title: 'Step Time (s)' },
+                    margin: { t: 40, b: 60, l: 55, r: 25 }, legend: { orientation: 'h', y: -0.22 }
                 }, {responsive: true});
             }
 
             else if (tabId === 'fig3a') {
-                title.innerText = 'Figure 3a: Step Duration Stacked Breakdown (GPT-2 Small)';
-                desc.innerText = 'Visualizing constant AllReduce communication time (~41.0–41.5s) as compute work scales up with K.';
+                title.innerText = 'Figure 3a: Step Duration Stacked Breakdown (All 3 Models)';
+                desc.innerText = 'Constant AllReduce wall-clock floor (~3.8s ResNet, ~12.2s Whisper, ~41.2s GPT-2) vs. growing local compute.';
                 badge.innerHTML = '<span class="text-xs bg-purple-50 text-purple-700 font-medium px-2.5 py-1 rounded-md border border-purple-200">Solo Subfigure 3a</span>';
 
-                const trace_fwd = { x: ks, y: fwd_gpt2, name: 'Forward Compute (Local CPU)', type: 'bar', marker: { color: '#3b82f6' } };
-                const trace_bwd = { x: ks, y: bwd_gpt2, name: 'Backward Compute (Local CPU)', type: 'bar', marker: { color: '#10b981' } };
-                const trace_comm = { x: ks, y: comm_gpt2, name: 'AllReduce Network Barrier (100 Mbps)', type: 'bar', marker: { color: '#ef4444' } };
-                Plotly.newPlot('main-chart', [trace_fwd, trace_bwd, trace_comm], {
+                const tr_rf = { x: ks, y: fwd_resnet, name: 'ResNet Fwd', type: 'bar', marker: { color: '#3b82f6' }, xaxis: 'x1', yaxis: 'y1', showlegend: false };
+                const tr_rb = { x: ks, y: bwd_resnet, name: 'ResNet Bwd', type: 'bar', marker: { color: '#10b981' }, xaxis: 'x1', yaxis: 'y1', showlegend: false };
+                const tr_rc = { x: ks, y: comm_resnet, name: 'ResNet Comm', type: 'bar', marker: { color: '#ef4444' }, xaxis: 'x1', yaxis: 'y1', showlegend: false };
+                const tr_gf = { x: ks, y: fwd_gpt2, name: 'Forward (CPU)', type: 'bar', marker: { color: '#3b82f6' }, xaxis: 'x2', yaxis: 'y2' };
+                const tr_gb = { x: ks, y: bwd_gpt2, name: 'Backward (CPU)', type: 'bar', marker: { color: '#10b981' }, xaxis: 'x2', yaxis: 'y2' };
+                const tr_gc = { x: ks, y: comm_gpt2, name: 'AllReduce (100 Mbps)', type: 'bar', marker: { color: '#ef4444' }, xaxis: 'x2', yaxis: 'y2' };
+                const tr_wf = { x: ks, y: fwd_whisper, name: 'Whisper Fwd', type: 'bar', marker: { color: '#3b82f6' }, xaxis: 'x3', yaxis: 'y3', showlegend: false };
+                const tr_wb = { x: ks, y: bwd_whisper, name: 'Whisper Bwd', type: 'bar', marker: { color: '#10b981' }, xaxis: 'x3', yaxis: 'y3', showlegend: false };
+                const tr_wc = { x: ks, y: comm_whisper, name: 'Whisper Comm', type: 'bar', marker: { color: '#ef4444' }, xaxis: 'x3', yaxis: 'y3', showlegend: false };
+
+                Plotly.newPlot('main-chart', [tr_rf, tr_rb, tr_rc, tr_gf, tr_gb, tr_gc, tr_wf, tr_wb, tr_wc], {
                     barmode: 'stack',
-                    xaxis: { title: 'Gradient Accumulation Configuration (K)' }, yaxis: { title: 'Step Duration (seconds)' },
-                    margin: { t: 40, b: 60, l: 60, r: 40 }, legend: { orientation: 'h', y: 1.1 }
+                    grid: { rows: 1, columns: 3, pattern: 'independent' },
+                    xaxis1: { title: 'ResNet-18 (K)' }, yaxis1: { title: 'Seconds' },
+                    xaxis2: { title: 'GPT-2 Small (K)' }, yaxis2: { title: 'Seconds' },
+                    xaxis3: { title: 'Whisper-Tiny (K)' }, yaxis3: { title: 'Seconds' },
+                    margin: { t: 40, b: 60, l: 55, r: 25 }, legend: { orientation: 'h', y: -0.22 }
                 }, {responsive: true});
             }
 
             else if (tabId === 'fig3b') {
                 title.innerText = 'Figure 3b: Compute-to-Communication Ratio (Γ = Tcomp / Tcomm)';
-                desc.innerText = 'Bottleneck inversion across transformers: GPT-2 moves 0.056 → 8.922, Whisper-Tiny moves 0.033 → 7.706.';
+                desc.innerText = 'All 3 modalities invert from communication-bound (Γ<1) to compute-bound (Γ>1): GPT-2 (8.92×), Whisper-Tiny (7.71×), ResNet-18 (4.71×).';
                 badge.innerHTML = '<span class="text-xs bg-purple-50 text-purple-700 font-medium px-2.5 py-1 rounded-md border border-purple-200">Solo Subfigure 3b</span>';
 
-                const t_g = { x: ks, y: gammas_gpt2, name: 'GPT-2 Ratio Γ', type: 'scatter', mode: 'lines+markers', marker: { size: 10, color: '#8b5cf6' }, line: { width: 3.5 } };
-                const t_w = { x: ks, y: gammas_whisper, name: 'Whisper-Tiny Ratio Γ', type: 'scatter', mode: 'lines+markers', marker: { size: 9, color: '#059669' }, line: { width: 3.0, dash: 'dot' } };
+                const t_r = { x: ks, y: gammas_resnet, name: 'ResNet-18 Γ', type: 'scatter', mode: 'lines+markers', marker: { size: 9, color: '#2563eb' }, line: { width: 3.0 } };
+                const t_g = { x: ks, y: gammas_gpt2, name: 'GPT-2 Γ', type: 'scatter', mode: 'lines+markers', marker: { size: 9, color: '#d97706' }, line: { width: 3.5 } };
+                const t_w = { x: ks, y: gammas_whisper, name: 'Whisper-Tiny Γ', type: 'scatter', mode: 'lines+markers', marker: { size: 9, color: '#059669' }, line: { width: 3.2 } };
                 const t_p = { x: ks, y: Array(7).fill(1.0), name: 'Parity Boundary (Γ = 1.0)', type: 'scatter', mode: 'lines', line: { dash: 'dash', color: '#dc2626', width: 2 } };
-                Plotly.newPlot('main-chart', [t_g, t_w, t_p], {
+                Plotly.newPlot('main-chart', [t_r, t_g, t_w, t_p], {
                     xaxis: { title: 'Gradient Accumulation Steps (K)' }, yaxis: { title: 'Ratio Γ = Tcomp / Tcomm' },
                     margin: { t: 40, b: 60, l: 60, r: 40 }, legend: { orientation: 'h', y: 1.1 }
                 }, {responsive: true});
@@ -468,16 +500,25 @@
                 }, {responsive: true});
             }
 
-            else if (tabId === 'fig6') {
-                title.innerText = 'Figure 6: Real-Time Hardware Telemetry Profile (18.4-Hour 1 Hz Trace)';
-                desc.innerText = 'Node 01 continuous telemetry (66,180 raw 1 Hz samples binned at 1-min resolution): CPU duty cycle, DDR4 RAM (13.18 GB peak, 0 MB swap), and 100 Mbps NIC throughput.';
-                badge.innerHTML = '<span class="text-xs bg-amber-50 text-amber-700 font-medium px-2.5 py-1 rounded-md border border-amber-200">System Telemetry</span>';
+            else if (tabId === 'fig6' || tabId === 'fig6b') {
+                const isVoice = (tabId === 'fig6b');
+                const traceData = isVoice ? sysmonVoice : sysmon;
+                const maxH = isVoice ? 3.58 : 18.4;
+                title.innerText = isVoice
+                    ? 'Figure 6b: Voice Campaign Telemetry Profile (3.6-Hour 1 Hz Trace)'
+                    : 'Figure 6: Vision/LLM Telemetry Profile (18.4-Hour 1 Hz Trace)';
+                desc.innerText = isVoice
+                    ? 'Node 01 Voice telemetry (12,879 raw 1 Hz samples binned at 1-min resolution): CPU up to 61.5%, DDR4 RAM 4.83 GB peak (0 MB swap), NIC 12.61 MB/s peak.'
+                    : 'Node 01 Vision+LLM telemetry (66,180 raw 1 Hz samples binned at 1-min resolution): CPU duty cycle, DDR4 RAM (13.18 GB peak, 0 MB swap), and 100 Mbps NIC throughput.';
+                badge.innerHTML = isVoice
+                    ? '<span class="text-xs bg-emerald-50 text-emerald-700 font-medium px-2.5 py-1 rounded-md border border-emerald-200">Voice Telemetry</span>'
+                    : '<span class="text-xs bg-amber-50 text-amber-700 font-medium px-2.5 py-1 rounded-md border border-amber-200">Vision/LLM Telemetry</span>';
 
-                const t_cpu = { x: sysmon.h, y: sysmon.cpu, name: 'CPU Usage (%)', type: 'scatter', mode: 'lines', line: { color: '#1f77b4', width: 1.5 }, xaxis: 'x', yaxis: 'y' };
-                const t_ram = { x: sysmon.h, y: sysmon.ram, name: 'RAM Used (GB)', type: 'scatter', mode: 'lines', fill: 'tozeroy', line: { color: '#2ca02c', width: 1.5 }, xaxis: 'x2', yaxis: 'y2' };
-                const t_ram_cap = { x: [0, 18.4], y: [14.88, 14.88], name: '14.88 GB DDR4 Cap', type: 'scatter', mode: 'lines', line: { dash: 'dash', color: '#dc2626', width: 1.5 }, xaxis: 'x2', yaxis: 'y2' };
-                const t_tx = { x: sysmon.h, y: sysmon.tx, name: 'Net Sent (MB/s)', type: 'scatter', mode: 'lines', line: { color: '#ff7f0e', width: 1.2 }, xaxis: 'x3', yaxis: 'y3' };
-                const t_rx = { x: sysmon.h, y: sysmon.rx, name: 'Net Recv (MB/s)', type: 'scatter', mode: 'lines', line: { color: '#9467bd', width: 1.2 }, xaxis: 'x3', yaxis: 'y3' };
+                const t_cpu = { x: traceData.h, y: traceData.cpu, name: 'CPU Usage (%)', type: 'scatter', mode: 'lines', line: { color: '#1f77b4', width: 1.5 }, xaxis: 'x', yaxis: 'y' };
+                const t_ram = { x: traceData.h, y: traceData.ram, name: 'RAM Used (GB)', type: 'scatter', mode: 'lines', fill: 'tozeroy', line: { color: '#2ca02c', width: 1.5 }, xaxis: 'x2', yaxis: 'y2' };
+                const t_ram_cap = { x: [0, maxH], y: [14.88, 14.88], name: '14.88 GB DDR4 Cap', type: 'scatter', mode: 'lines', line: { dash: 'dash', color: '#dc2626', width: 1.5 }, xaxis: 'x2', yaxis: 'y2' };
+                const t_tx = { x: traceData.h, y: traceData.tx, name: 'Net Sent (MB/s)', type: 'scatter', mode: 'lines', line: { color: '#ff7f0e', width: 1.2 }, xaxis: 'x3', yaxis: 'y3' };
+                const t_rx = { x: traceData.h, y: traceData.rx, name: 'Net Recv (MB/s)', type: 'scatter', mode: 'lines', line: { color: '#9467bd', width: 1.2 }, xaxis: 'x3', yaxis: 'y3' };
 
                 Plotly.newPlot('main-chart', [t_cpu, t_ram, t_ram_cap, t_tx, t_rx], {
                     grid: { rows: 3, columns: 1, subplots: [['xy'], ['x2y2'], ['x3y3']], roworder: 'top to bottom' },
